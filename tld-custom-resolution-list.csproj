@@ -1,0 +1,199 @@
+<Project>
+
+  <PropertyGroup>
+    <BaseOutputPath>$(TEMP)\tld-custom-resolution-list\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(TEMP)\tld-custom-resolution-list\obj\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>CustomResolutionList</AssemblyName>
+    <RootNamespace>CustomResolutionList</RootNamespace>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DebugType>embedded</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <SteamAppId>305620</SteamAppId>
+    <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <ResolveTheLongDarkGamePathScriptPath>$(BaseIntermediateOutputPath)resolve-the-long-dark-path.ps1</ResolveTheLongDarkGamePathScriptPath>
+  </PropertyGroup>
+
+  <Target Name="ResolveTheLongDarkGamePath" BeforeTargets="ResolveAssemblyReferences" Condition="'$(TheLongDarkGamePath)' == ''">
+    <MakeDir Directories="$(BaseIntermediateOutputPath)" />
+
+    <ItemGroup>
+      <ResolveTheLongDarkGamePathScriptLine Include="param(" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    [Parameter(Mandatory = $true)]" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    [string]$AppId" />
+      <ResolveTheLongDarkGamePathScriptLine Include=")" />
+      <ResolveTheLongDarkGamePathScriptLine Include="$ErrorActionPreference = 'Stop'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="function ConvertFrom-VdfPath {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    param([string]$Value)" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    return $Value.Replace('\\', '\').Replace('\&quot;', '&quot;')" />
+      <ResolveTheLongDarkGamePathScriptLine Include="}" />
+      <ResolveTheLongDarkGamePathScriptLine Include="function Get-SteamRoot {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $registryPaths = @(" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        'HKCU:\Software\Valve\Steam'," />
+      <ResolveTheLongDarkGamePathScriptLine Include="        'HKLM:\SOFTWARE\WOW6432Node\Valve\Steam'," />
+      <ResolveTheLongDarkGamePathScriptLine Include="        'HKLM:\SOFTWARE\Valve\Steam'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    )" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    foreach ($registryPath in $registryPaths) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        if (!(Test-Path $registryPath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            continue" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        $properties = Get-ItemProperty -Path $registryPath" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        foreach ($propertyName in @('SteamPath', 'InstallPath')) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            $path = $properties.$propertyName" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            if (![string]::IsNullOrWhiteSpace($path) -and (Test-Path $path)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="                return (Resolve-Path $path).Path" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $defaultPaths = @()" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if (![string]::IsNullOrWhiteSpace(${env:ProgramFiles(x86)})) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        $defaultPaths += Join-Path ${env:ProgramFiles(x86)} 'Steam'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if (![string]::IsNullOrWhiteSpace($env:ProgramFiles)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        $defaultPaths += Join-Path $env:ProgramFiles 'Steam'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    foreach ($defaultPath in $defaultPaths) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        if (Test-Path $defaultPath) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            return (Resolve-Path $defaultPath).Path" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    throw 'Steam installation was not found.'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="}" />
+      <ResolveTheLongDarkGamePathScriptLine Include="function Add-LibraryRoot {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    param([string]$Path)" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if ([string]::IsNullOrWhiteSpace($Path) -or !(Test-Path $Path)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        return" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $resolvedPath = (Resolve-Path $Path).Path" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if (!$script:libraryRoots.Contains($resolvedPath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        $script:libraryRoots += $resolvedPath" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="}" />
+      <ResolveTheLongDarkGamePathScriptLine Include="function Get-SteamLibraryRoots {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    param([string]$SteamRoot)" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $script:libraryRoots = @()" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    Add-LibraryRoot $SteamRoot" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $libraryFilePath = Join-Path $SteamRoot 'steamapps\libraryfolders.vdf'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if (!(Test-Path $libraryFilePath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        return $script:libraryRoots" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    foreach ($line in [System.IO.File]::ReadLines($libraryFilePath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        if ($line -match '&quot;path&quot;\s+&quot;([^&quot;]+)&quot;') {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            Add-LibraryRoot (ConvertFrom-VdfPath $matches[1])" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            continue" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        if ($line -match '&quot;\d+&quot;\s+&quot;([^&quot;]+)&quot;') {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            Add-LibraryRoot (ConvertFrom-VdfPath $matches[1])" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    return $script:libraryRoots" />
+      <ResolveTheLongDarkGamePathScriptLine Include="}" />
+      <ResolveTheLongDarkGamePathScriptLine Include="function Get-InstallDirectoryName {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    param([string]$ManifestPath)" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    foreach ($line in [System.IO.File]::ReadLines($ManifestPath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        if ($line -match '&quot;installdir&quot;\s+&quot;([^&quot;]+)&quot;') {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="            return ConvertFrom-VdfPath $matches[1]" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    return $null" />
+      <ResolveTheLongDarkGamePathScriptLine Include="}" />
+      <ResolveTheLongDarkGamePathScriptLine Include="$steamRoot = Get-SteamRoot" />
+      <ResolveTheLongDarkGamePathScriptLine Include="$libraryRoots = Get-SteamLibraryRoots $steamRoot" />
+      <ResolveTheLongDarkGamePathScriptLine Include="foreach ($libraryRoot in $libraryRoots) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $manifestPath = Join-Path $libraryRoot (&quot;steamapps\appmanifest_$AppId.acf&quot;)" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if (!(Test-Path $manifestPath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        continue" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $installDirectoryName = Get-InstallDirectoryName $manifestPath" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if ([string]::IsNullOrWhiteSpace($installDirectoryName)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        continue" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $gamePath = Join-Path (Join-Path $libraryRoot 'steamapps\common') $installDirectoryName" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $executablePath = Join-Path $gamePath 'tld.exe'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $dataPath = Join-Path $gamePath 'tld_Data'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $melonLoaderPath = Join-Path $gamePath 'MelonLoader\net6\MelonLoader.dll'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $il2CppInteropPath = Join-Path $gamePath 'MelonLoader\net6\Il2CppInterop.Runtime.dll'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    $il2CppAssembliesPath = Join-Path $gamePath 'MelonLoader\Il2CppAssemblies'" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    if ((Test-Path $executablePath) -and (Test-Path $dataPath) -and (Test-Path $melonLoaderPath) -and (Test-Path $il2CppInteropPath) -and (Test-Path $il2CppAssembliesPath)) {" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        Write-Output (Resolve-Path $gamePath).Path" />
+      <ResolveTheLongDarkGamePathScriptLine Include="        exit 0" />
+      <ResolveTheLongDarkGamePathScriptLine Include="    }" />
+      <ResolveTheLongDarkGamePathScriptLine Include="}" />
+      <ResolveTheLongDarkGamePathScriptLine Include="throw &quot;The Long Dark Steam app $AppId was not found with a valid MelonLoader installation and Il2CppAssemblies folder.&quot;" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(ResolveTheLongDarkGamePathScriptPath)" Lines="@(ResolveTheLongDarkGamePathScriptLine)" Overwrite="true" Encoding="UTF-8" />
+
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ResolveTheLongDarkGamePathScriptPath)&quot; -AppId &quot;$(SteamAppId)&quot;" ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="TheLongDarkGamePath" />
+    </Exec>
+  </Target>
+
+  <Target Name="PrepareTheLongDarkReferences" BeforeTargets="ResolveAssemblyReferences" DependsOnTargets="ResolveTheLongDarkGamePath">
+    <PropertyGroup>
+      <TheLongDarkModsPath>$(TheLongDarkGamePath)\Mods</TheLongDarkModsPath>
+      <MelonLoaderNet6Path>$(TheLongDarkGamePath)\MelonLoader\net6</MelonLoaderNet6Path>
+      <TheLongDarkIl2CppAssembliesPath>$(TheLongDarkGamePath)\MelonLoader\Il2CppAssemblies</TheLongDarkIl2CppAssembliesPath>
+    </PropertyGroup>
+
+    <Error Condition="'$(TheLongDarkGamePath)' == ''" Text="TheLongDarkGamePath was not resolved. Pass it manually with /p:TheLongDarkGamePath=&quot;D:\Path\To\TheLongDark&quot;." />
+    <Error Condition="!Exists('$(TheLongDarkGamePath)\tld.exe')" Text="TheLongDarkGamePath does not point to a valid The Long Dark game root." />
+    <Error Condition="!Exists('$(MelonLoaderNet6Path)\MelonLoader.dll')" Text="MelonLoader.dll was not found under MelonLoader\net6." />
+    <Error Condition="!Exists('$(MelonLoaderNet6Path)\0Harmony.dll')" Text="0Harmony.dll was not found under MelonLoader\net6." />
+    <Error Condition="!Exists('$(MelonLoaderNet6Path)\Il2CppInterop.Runtime.dll')" Text="Il2CppInterop.Runtime.dll was not found under MelonLoader\net6." />
+    <Error Condition="!Exists('$(TheLongDarkIl2CppAssembliesPath)\Assembly-CSharp.dll')" Text="Assembly-CSharp.dll was not found under MelonLoader\Il2CppAssemblies." />
+    <Error Condition="!Exists('$(TheLongDarkIl2CppAssembliesPath)\UnityEngine.CoreModule.dll')" Text="UnityEngine.CoreModule.dll was not found under MelonLoader\Il2CppAssemblies." />
+    <Error Condition="!Exists('$(TheLongDarkIl2CppAssembliesPath)\Il2Cppmscorlib.dll')" Text="Il2Cppmscorlib.dll was not found under MelonLoader\Il2CppAssemblies." />
+    <Error Condition="!Exists('$(TheLongDarkIl2CppAssembliesPath)\Il2CppTLD.SaveState.dll')" Text="Il2CppTLD.SaveState.dll was not found under MelonLoader\Il2CppAssemblies." />
+
+    <ItemGroup>
+      <Reference Include="MelonLoader">
+        <HintPath>$(MelonLoaderNet6Path)\MelonLoader.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+      <Reference Include="0Harmony">
+        <HintPath>$(MelonLoaderNet6Path)\0Harmony.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+      <Reference Include="Il2CppInterop.Runtime">
+        <HintPath>$(MelonLoaderNet6Path)\Il2CppInterop.Runtime.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+      <Reference Include="Assembly-CSharp">
+        <HintPath>$(TheLongDarkIl2CppAssembliesPath)\Assembly-CSharp.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+      <Reference Include="UnityEngine.CoreModule">
+        <HintPath>$(TheLongDarkIl2CppAssembliesPath)\UnityEngine.CoreModule.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+      <Reference Include="Il2Cppmscorlib">
+        <HintPath>$(TheLongDarkIl2CppAssembliesPath)\Il2Cppmscorlib.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+      <Reference Include="Il2CppTLD.SaveState">
+        <HintPath>$(TheLongDarkIl2CppAssembliesPath)\Il2CppTLD.SaveState.dll</HintPath>
+        <Private>false</Private>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyToTheLongDarkMods" AfterTargets="Build" DependsOnTargets="PrepareTheLongDarkReferences">
+    <MakeDir Directories="$(TheLongDarkModsPath)" Condition="!Exists('$(TheLongDarkModsPath)')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(TheLongDarkModsPath)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+</Project>
